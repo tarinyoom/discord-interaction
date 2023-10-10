@@ -8,17 +8,17 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::collections;
 
 #[derive(Deserialize, PartialEq, Debug)]
-pub struct InteractionRequest {
-    pub r#type: InteractionType,
-    pub data: Option<InteractionData>,
+pub struct Request {
+    pub r#type: Type,
+    pub data: Option<Data>,
     pub member: Option<GuildMember>,
     pub message: Option<Message>,
 }
 
-impl InteractionRequest {
+impl Request {
     pub fn ping() -> Self {
-        InteractionRequest {
-            r#type: InteractionType::Ping,
+        Request {
+            r#type: Type::Ping,
             data: None,
             member: None,
             message: None,
@@ -43,7 +43,7 @@ impl InteractionRequest {
     pub fn command_name(&self) -> Option<String> {
         match &self.data {
             Some(data) => match &data {
-                InteractionData::Command(app_data) => Some(app_data.name.clone()),
+                Data::Command(app_data) => Some(app_data.name.clone()),
                 _ => None,
             },
             None => None,
@@ -53,9 +53,9 @@ impl InteractionRequest {
     pub fn custom_id(&self) -> Option<String> {
         match &self.data {
             Some(data) => match &data {
-                InteractionData::Command(_) => None,
-                InteractionData::Message(msg_data) => Some(msg_data.custom_id.clone()),
-                InteractionData::Modal(modal_data) => Some(modal_data.custom_id.clone()),
+                Data::Command(_) => None,
+                Data::Message(msg_data) => Some(msg_data.custom_id.clone()),
+                Data::Modal(modal_data) => Some(modal_data.custom_id.clone()),
             },
             None => None,
         }
@@ -64,7 +64,7 @@ impl InteractionRequest {
     pub fn modal_submit_values(&self) -> collections::HashMap<String, String> {
         match &self.data {
             Some(data) => match &data {
-                InteractionData::Modal(modal_data) => modal_data.values(),
+                Data::Modal(modal_data) => modal_data.values(),
                 _ => collections::HashMap::new(),
             },
             _ => collections::HashMap::new(),
@@ -90,33 +90,33 @@ impl InteractionRequest {
     }
 }
 
-impl From<ApplicationCommandData> for InteractionRequest {
+impl From<ApplicationCommandData> for Request {
     fn from(data: ApplicationCommandData) -> Self {
-        InteractionRequest {
-            r#type: InteractionType::ApplicationCommand,
-            data: Some(InteractionData::Command(data)),
+        Request {
+            r#type: Type::ApplicationCommand,
+            data: Some(Data::Command(data)),
             member: None,
             message: None,
         }
     }
 }
 
-impl From<MessageComponentData> for InteractionRequest {
+impl From<MessageComponentData> for Request {
     fn from(data: MessageComponentData) -> Self {
-        InteractionRequest {
-            r#type: InteractionType::MessageComponent,
-            data: Some(InteractionData::Message(data)),
+        Request {
+            r#type: Type::MessageComponent,
+            data: Some(Data::Message(data)),
             member: None,
             message: None,
         }
     }
 }
 
-impl From<ModalSubmitData> for InteractionRequest {
+impl From<ModalSubmitData> for Request {
     fn from(data: ModalSubmitData) -> Self {
-        InteractionRequest {
-            r#type: InteractionType::ModalSubmit,
-            data: Some(InteractionData::Modal(data)),
+        Request {
+            r#type: Type::ModalSubmit,
+            data: Some(Data::Modal(data)),
             member: None,
             message: None,
         }
@@ -125,7 +125,7 @@ impl From<ModalSubmitData> for InteractionRequest {
 
 #[derive(Deserialize_repr, PartialEq, Debug)]
 #[repr(u8)]
-pub enum InteractionType {
+pub enum Type {
     Ping = 1,
     ApplicationCommand = 2,
     MessageComponent = 3,
@@ -134,7 +134,7 @@ pub enum InteractionType {
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(untagged)]
-pub enum InteractionData {
+pub enum Data {
     Command(ApplicationCommandData),
     Message(MessageComponentData),
     Modal(ModalSubmitData),
@@ -217,12 +217,12 @@ pub struct User {
 }
 
 #[derive(Serialize, PartialEq, Debug)]
-pub struct InteractionResponse {
-    r#type: InteractionCallbackType,
-    data: InteractionCallbackData,
+pub struct Response {
+    r#type: CallbackType,
+    data: CallbackData,
 }
 
-impl InteractionResponse {
+impl Response {
     pub fn pong() -> Self {
         let data = MessageCallbackData {
             content: "".to_string(),
@@ -230,9 +230,9 @@ impl InteractionResponse {
             components: Vec::new(),
         };
 
-        InteractionResponse {
-            r#type: InteractionCallbackType::Pong,
-            data: InteractionCallbackData::Message(data),
+        Response {
+            r#type: CallbackType::Pong,
+            data: CallbackData::Message(data),
         }
     }
 
@@ -253,20 +253,20 @@ impl InteractionResponse {
     }
 
     pub fn edit(mut self) -> Self {
-        self.r#type = InteractionCallbackType::UpdateMessage;
+        self.r#type = CallbackType::UpdateMessage;
         self
     }
 
     pub fn message_content(&self) -> Option<String> {
         match &self.data {
-            InteractionCallbackData::Message(m) => Some(m.content.clone()),
+            CallbackData::Message(m) => Some(m.content.clone()),
             _ => None,
         }
     }
 
     pub fn message_components(&self) -> Vec<Component> {
         match &self.data {
-            InteractionCallbackData::Message(m) => {
+            CallbackData::Message(m) => {
                 if m.components.len() != 1 {
                     panic!();
                 } else {
@@ -278,27 +278,27 @@ impl InteractionResponse {
     }
 }
 
-impl From<ModalCallbackData> for InteractionResponse {
-    fn from(data: ModalCallbackData) -> InteractionResponse {
-        InteractionResponse {
-            r#type: InteractionCallbackType::Modal,
-            data: InteractionCallbackData::Modal(data),
+impl From<ModalCallbackData> for Response {
+    fn from(data: ModalCallbackData) -> Response {
+        Response {
+            r#type: CallbackType::Modal,
+            data: CallbackData::Modal(data),
         }
     }
 }
 
-impl From<MessageCallbackData> for InteractionResponse {
-    fn from(data: MessageCallbackData) -> InteractionResponse {
-        InteractionResponse {
-            r#type: InteractionCallbackType::ChannelMessageWithSource,
-            data: InteractionCallbackData::Message(data),
+impl From<MessageCallbackData> for Response {
+    fn from(data: MessageCallbackData) -> Response {
+        Response {
+            r#type: CallbackType::ChannelMessageWithSource,
+            data: CallbackData::Message(data),
         }
     }
 }
 
 #[derive(Serialize_repr, PartialEq, Debug)]
 #[repr(u8)]
-pub enum InteractionCallbackType {
+pub enum CallbackType {
     Pong = 1,
     ChannelMessageWithSource = 4,
     UpdateMessage = 7,
@@ -307,7 +307,7 @@ pub enum InteractionCallbackType {
 
 #[derive(Serialize, PartialEq, Debug)]
 #[serde(untagged)]
-pub enum InteractionCallbackData {
+pub enum CallbackData {
     Message(MessageCallbackData),
     Modal(ModalCallbackData),
 }
