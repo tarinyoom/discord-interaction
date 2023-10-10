@@ -3,3 +3,6 @@ name = "discord_interaction"
 version = "0.0.1"
 edition = "2021"
 
+[dependencies]
+serde = { version = "=1.0.171", features = ["derive"] }
+serde_repr = "0.1.16"
