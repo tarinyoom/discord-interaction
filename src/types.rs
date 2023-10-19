@@ -9,7 +9,7 @@ use std::collections;
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct Request {
-    pub r#type: Type,
+    pub r#type: InteractionType,
     pub data: Option<Data>,
     pub member: Option<GuildMember>,
     pub message: Option<Message>,
@@ -18,7 +18,7 @@ pub struct Request {
 impl Request {
     pub fn ping() -> Self {
         Request {
-            r#type: Type::Ping,
+            r#type: InteractionType::Ping,
             data: None,
             member: None,
             message: None,
@@ -93,7 +93,7 @@ impl Request {
 impl From<ApplicationCommandData> for Request {
     fn from(data: ApplicationCommandData) -> Self {
         Request {
-            r#type: Type::ApplicationCommand,
+            r#type: InteractionType::ApplicationCommand,
             data: Some(Data::Command(data)),
             member: None,
             message: None,
@@ -104,7 +104,7 @@ impl From<ApplicationCommandData> for Request {
 impl From<MessageComponentData> for Request {
     fn from(data: MessageComponentData) -> Self {
         Request {
-            r#type: Type::MessageComponent,
+            r#type: InteractionType::MessageComponent,
             data: Some(Data::Message(data)),
             member: None,
             message: None,
@@ -115,7 +115,7 @@ impl From<MessageComponentData> for Request {
 impl From<ModalSubmitData> for Request {
     fn from(data: ModalSubmitData) -> Self {
         Request {
-            r#type: Type::ModalSubmit,
+            r#type: InteractionType::ModalSubmit,
             data: Some(Data::Modal(data)),
             member: None,
             message: None,
@@ -125,7 +125,7 @@ impl From<ModalSubmitData> for Request {
 
 #[derive(Deserialize_repr, PartialEq, Debug)]
 #[repr(u8)]
-pub enum Type {
+pub enum InteractionType {
     Ping = 1,
     ApplicationCommand = 2,
     MessageComponent = 3,
