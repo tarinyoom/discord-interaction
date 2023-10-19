@@ -1,6 +1,6 @@
 mod types;
 
-pub use types::{Request, Response};
+pub use types::*;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
