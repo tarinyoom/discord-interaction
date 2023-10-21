@@ -1,6 +1,9 @@
-mod types;
+mod auth;
+mod handler;
+mod interaction_types;
 
-pub use types::*;
+pub use handler::InteractionHandler;
+pub use interaction_types::*;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
