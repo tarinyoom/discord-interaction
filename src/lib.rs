@@ -2,6 +2,7 @@ mod auth;
 mod handler;
 mod interaction_types;
 
+pub use auth::run_handler;
 pub use handler::InteractionHandler;
 pub use interaction_types::*;
 
