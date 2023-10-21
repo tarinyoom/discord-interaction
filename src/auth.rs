@@ -4,9 +4,7 @@ use lambda_http::http::{HeaderMap, StatusCode};
 use lambda_http::{run, service_fn, Body, Error, Request, Response};
 use serde_json::json;
 
-const APPLICATION_PUBLIC_KEY: &str = env!("SOMMELIER_PUBLIC_KEY");
-
-pub async fn run_handler(handler: InteractionHandler) -> Result<(), Error> {
+pub async fn run_handler(app_pk: &str, handler: &InteractionHandler) -> Result<(), Error> {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         // disable printing the name of the module in every log line.
@@ -16,19 +14,20 @@ pub async fn run_handler(handler: InteractionHandler) -> Result<(), Error> {
         .init();
 
     run(service_fn(|req: Request| async {
-        handle_request(&handler, req).await
+        handle_request(req, app_pk, handler).await
     }))
     .await
 }
 
 async fn handle_request(
-    handler: &InteractionHandler,
     req: Request,
+    app_pk: &str,
+    handler: &InteractionHandler,
 ) -> Result<Response<Body>, Error> {
     let req_body = std::str::from_utf8(req.body()).unwrap();
     let headers = req.headers();
 
-    match verify(&req_body, headers) {
+    match verify(&req_body, headers, app_pk) {
         Ok(()) => {
             let res_body = handle_body(handler, &req_body).unwrap_or("{}".to_string());
 
@@ -62,8 +61,8 @@ fn handle_body(handler: &InteractionHandler, req: &str) -> Option<String> {
     }
 }
 
-fn verify(body: &str, headers: &HeaderMap) -> Result<(), StatusCode> {
-    let application_public_key: [u8; PUBLIC_KEY_LENGTH] = hex::decode(&APPLICATION_PUBLIC_KEY)
+fn verify(body: &str, headers: &HeaderMap, app_pk: &str) -> Result<(), StatusCode> {
+    let application_public_key: [u8; PUBLIC_KEY_LENGTH] = hex::decode(&app_pk)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .try_into()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
