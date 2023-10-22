@@ -1,4 +1,4 @@
-name: LibTests
+name: Global
 
 on:
   push:
@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_test:
+  FormatBuildTest:
 
     runs-on: ubuntu-latest
 
