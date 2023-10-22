@@ -4,7 +4,10 @@ use lambda_http::http::{HeaderMap, StatusCode};
 use lambda_http::{run, service_fn, Body, Error, Request, Response};
 use serde_json::json;
 
-pub async fn run_handler(app_pk: &str, handler: &InteractionHandler) -> Result<(), Error> {
+pub async fn run_handler<T>(app_pk: &str, handler: &T) -> Result<(), Error>
+where
+    T: InteractionHandler + Sync,
+{
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         // disable printing the name of the module in every log line.
@@ -19,11 +22,10 @@ pub async fn run_handler(app_pk: &str, handler: &InteractionHandler) -> Result<(
     .await
 }
 
-async fn handle_request(
-    req: Request,
-    app_pk: &str,
-    handler: &InteractionHandler,
-) -> Result<Response<Body>, Error> {
+async fn handle_request<T>(req: Request, app_pk: &str, handler: &T) -> Result<Response<Body>, Error>
+where
+    T: InteractionHandler + Sync,
+{
     let req_body = std::str::from_utf8(req.body()).unwrap();
     let headers = req.headers();
 
@@ -45,7 +47,10 @@ async fn handle_request(
     }
 }
 
-fn handle_body(handler: &InteractionHandler, req: &str) -> Option<String> {
+fn handle_body<T>(handler: &T, req: &str) -> Option<String>
+where
+    T: InteractionHandler + Sync,
+{
     match serde_json::from_str::<crate::Request>(req) {
         Ok(interaction) => {
             let res = handler.handle_interaction(&interaction);
