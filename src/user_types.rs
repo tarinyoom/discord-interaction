@@ -1,14 +1,14 @@
 use super::discord_types::*;
 
 pub struct ApplicationCommand {
-    pub command: String,
+    pub command_name: String,
     pub user_id: String,
 }
 
 impl From<&Request> for ApplicationCommand {
     fn from(req: &Request) -> Self {
         ApplicationCommand {
-            command: req.data.as_ref().unwrap().name.as_ref().unwrap().clone(),
+            command_name: req.data.as_ref().unwrap().name.as_ref().unwrap().clone(),
             user_id: req.member.as_ref().unwrap().user.id.clone(),
         }
     }

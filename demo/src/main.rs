@@ -15,8 +15,12 @@ struct DemoHandler;
 
 impl InteractionHandler for DemoHandler {
     fn handle_application_command(&self, ac: ApplicationCommand) -> ApplicationCommandResponse {
-        ApplicationCommandResponse {
-            text: "hi".to_string(),
+        match ac.command_name.as_str() {
+            "hello" => ApplicationCommandResponse {
+                text: format!("Hello <@{}>!", ac.user_id)
+            },
+
+            _ => todo!(),
         }
     }
 }
