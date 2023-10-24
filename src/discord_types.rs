@@ -27,7 +27,7 @@ pub enum InteractionType {
 pub struct InteractionData {
     pub name: Option<String>,
     pub custom_id: Option<String>,
-    pub components: Option<Vec<ActionRow>>,
+    pub components: Option<Vec<Component>>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -70,39 +70,19 @@ pub enum InteractionCallbackType {
 pub struct InteractionCallbackData {
     pub content: Option<String>,
     pub flags: Option<MessageFlags>,
-    pub components: Vec<ActionRow>,
+    pub components: Vec<Component>,
     pub custom_id: Option<String>,
     pub title: Option<String>,
 }
 
-#[derive(Deserialize, Serialize, PartialEq, Debug)]
-pub struct ActionRow {
-    pub r#type: ComponentType,
-    pub components: Vec<Component>,
-}
-
 #[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]
-#[serde(untagged)]
-pub enum Component {
-    Button(Button),
-    Text(TextInput),
-}
-
-#[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]
-pub struct Button {
+pub struct Component {
     pub r#type: ComponentType,
     pub label: Option<String>,
-    pub style: ButtonStyle,
-    pub custom_id: String,
-}
-
-#[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]
-pub struct TextInput {
-    pub r#type: ComponentType,
-    pub label: Option<String>,
-    pub style: Option<TextInputStyle>,
-    pub custom_id: String,
+    pub style: Option<u8>,
+    pub custom_id: Option<String>,
     pub value: Option<String>,
+    pub components: Option<Vec<Component>>,
 }
 
 #[derive(Deserialize_repr, Serialize_repr, PartialEq, Debug, Clone)]

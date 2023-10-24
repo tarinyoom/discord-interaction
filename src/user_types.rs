@@ -36,19 +36,49 @@ impl From<&Request> for ModalSubmit {
 
 pub struct ApplicationCommandResponse {
     pub text: String,
+    pub buttons: Vec<Button>,
 }
 
 impl Into<Response> for ApplicationCommandResponse {
     fn into(self) -> Response {
+        let row = Component {
+            r#type: ComponentType::ActionRow,
+            label: None,
+            style: None,
+            custom_id: None,
+            value: None,
+            components: Some(self.buttons.iter().map(|b| b.into()).collect()),
+        };
+
+        let rows = vec![row];
+
         Response {
             r#type: InteractionCallbackType::ChannelMessageWithSource,
             data: Some(InteractionCallbackData {
                 content: Some(self.text),
-                components: Vec::new(),
+                components: rows,
                 flags: Some(MessageFlags::Ephemeral),
                 custom_id: None,
                 title: None,
             }),
+        }
+    }
+}
+
+pub struct Button {
+    pub id: String,
+    pub text: String,
+}
+
+impl Into<Component> for &Button {
+    fn into(self) -> Component {
+        Component {
+            r#type: ComponentType::Button,
+            label: Some(self.text.clone()),
+            style: Some(1),
+            custom_id: Some(self.id.clone()),
+            value: None,
+            components: None,
         }
     }
 }
