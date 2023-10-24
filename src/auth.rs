@@ -51,9 +51,9 @@ fn handle_body<T>(handler: &T, req: &str) -> Option<String>
 where
     T: InteractionHandler + Sync,
 {
-    match serde_json::from_str::<crate::Request>(req) {
+    match serde_json::from_str::<super::discord_types::Request>(req) {
         Ok(interaction) => {
-            let res = handler.handle_interaction(&interaction);
+            let res = super::handler::handle_interaction(handler, &interaction);
 
             let res_json = json!(res).to_string();
 

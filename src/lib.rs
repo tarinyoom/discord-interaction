@@ -1,10 +1,11 @@
 mod auth;
+mod discord_types;
 mod handler;
-mod interaction_types;
+mod user_types;
 
 pub use auth::run_handler;
 pub use handler::InteractionHandler;
-pub use interaction_types::*;
+pub use user_types::*;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

@@ -1,4 +1,4 @@
-use discord_interaction::{run_handler, InteractionHandler, InteractionType, Request, Response};
+use discord_interaction::{run_handler, InteractionHandler, ApplicationCommand, ApplicationCommandResponse};
 use lambda_http::Error;
 
 const APPLICATION_PUBLIC_KEY: &str = env!("DEMO_PUBLIC_KEY");
@@ -12,10 +12,9 @@ async fn main() -> Result<(), Error> {
 struct DemoHandler;
 
 impl InteractionHandler for DemoHandler {
-    fn handle_interaction(&self, req: &Request) -> Response {
-        match &req.r#type {
-            InteractionType::Ping => Response::pong(),
-            _ => Response::message().content("hello world").into(),
+    fn handle_application_command(&self, ac: ApplicationCommand) -> ApplicationCommandResponse {
+        ApplicationCommandResponse {
+            text: "hi".to_string()
         }
     }
 }

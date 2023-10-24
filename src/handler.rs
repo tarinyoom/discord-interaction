@@ -1,5 +1,31 @@
-use crate::{Request, Response};
+use super::user_types::{
+    ApplicationCommand, ApplicationCommandResponse, 
+    MessageComponent, MessageComponentResponse,
+    ModalSubmit, ModalSubmitResponse,
+};
+
+use super::discord_types::{Request, Response, InteractionType};
 
 pub trait InteractionHandler {
-    fn handle_interaction(&self, req: &Request) -> Response;
+    fn handle_application_command(&self, ac: ApplicationCommand) -> ApplicationCommandResponse {
+        todo!();
+    }
+
+    fn handle_message_component(&self, mc: MessageComponent) -> MessageComponentResponse {
+        todo!();
+    }
+
+    fn handle_modal_submit(&self, ms: ModalSubmit) -> ModalSubmitResponse {
+        todo!();
+    }
+}
+
+pub fn handle_interaction<T>(handler: &T, req: &Request) -> Response 
+where T: InteractionHandler {
+    match req.r#type {
+        InteractionType::Ping => Response::pong(),
+        InteractionType::ApplicationCommand => handler.handle_application_command(req.into()).into(),
+        InteractionType::MessageComponent => handler.handle_message_component(req.into()).into(),
+        InteractionType::ModalSubmit => handler.handle_modal_submit(req.into()).into(),
+    }
 }
