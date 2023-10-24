@@ -1,13 +1,15 @@
-use super::discord_types::{Request, Response};
+use super::discord_types::*;
 
 pub struct ApplicationCommand {
-    pub name: String,
+    pub command: String,
+    pub user_id: String,
 }
 
 impl From<&Request> for ApplicationCommand {
-    fn from(_: &Request) -> Self {
+    fn from(req: &Request) -> Self {
         ApplicationCommand {
-            name: "DEBUG_COMMAND_NAME".to_string(),
+            command: req.data.as_ref().unwrap().name.as_ref().unwrap().clone(),
+            user_id: req.member.as_ref().unwrap().user.id.clone(),
         }
     }
 }
@@ -18,9 +20,7 @@ pub struct MessageComponent {
 
 impl From<&Request> for MessageComponent {
     fn from(req: &Request) -> Self {
-        MessageComponent {
-            id: req.custom_id().unwrap().clone(),
-        }
+        MessageComponent { id: "".to_string() }
     }
 }
 
@@ -30,9 +30,7 @@ pub struct ModalSubmit {
 
 impl From<&Request> for ModalSubmit {
     fn from(req: &Request) -> Self {
-        ModalSubmit {
-            id: req.custom_id().unwrap().clone(),
-        }
+        ModalSubmit { id: "".to_string() }
     }
 }
 
@@ -42,24 +40,31 @@ pub struct ApplicationCommandResponse {
 
 impl Into<Response> for ApplicationCommandResponse {
     fn into(self) -> Response {
-        Response::message().content("TEST RESPONSE").into()
+        Response {
+            r#type: InteractionCallbackType::ChannelMessageWithSource,
+            data: Some(InteractionCallbackData {
+                content: Some(self.text),
+                components: Vec::new(),
+                flags: Some(MessageFlags::Ephemeral),
+                custom_id: None,
+                title: None,
+            }),
+        }
     }
 }
 
-pub struct MessageComponentResponse {
-}
+pub struct MessageComponentResponse {}
 
 impl Into<Response> for MessageComponentResponse {
     fn into(self) -> Response {
-        Response::pong()
+        todo!();
     }
 }
 
-pub struct ModalSubmitResponse {
-}
+pub struct ModalSubmitResponse {}
 
 impl Into<Response> for ModalSubmitResponse {
     fn into(self) -> Response {
-        Response::pong()
+        todo!();
     }
 }
