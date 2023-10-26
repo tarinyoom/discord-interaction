@@ -1,4 +1,5 @@
 use super::discord_types::*;
+use std::collections::HashMap;
 
 /* Request Types */
 
@@ -13,6 +14,7 @@ pub struct MessageComponent {
 
 pub struct ModalSubmit {
     pub id: String,
+    pub values: HashMap<String, String>,
 }
 
 /* Response Types */
@@ -137,7 +139,33 @@ impl From<&InteractionRequest> for MessageComponent {
 
 impl From<&InteractionRequest> for ModalSubmit {
     fn from(req: &InteractionRequest) -> Self {
-        ModalSubmit { id: "".to_string() }
+        ModalSubmit {
+            id: req
+                .data
+                .as_ref()
+                .unwrap()
+                .custom_id
+                .as_ref()
+                .unwrap()
+                .clone(),
+
+            values: req
+                .data
+                .as_ref()
+                .unwrap()
+                .components
+                .as_ref()
+                .unwrap()
+                .iter()
+                .map(|row| {
+                    let inner = &row.components.as_ref().unwrap()[0];
+                    (
+                        inner.custom_id.as_ref().unwrap().clone(),
+                        inner.value.as_ref().unwrap().clone(),
+                    )
+                })
+                .collect(),
+        }
     }
 }
 

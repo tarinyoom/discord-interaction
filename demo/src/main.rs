@@ -1,5 +1,6 @@
 use discord_interaction::{
-    run_handler, ApplicationCommand, InteractionHandler, Message, MessageComponent, Modal, Response,
+    run_handler, ApplicationCommand, InteractionHandler, Message, MessageComponent, Modal,
+    ModalSubmit, Response,
 };
 use lambda_http::Error;
 
@@ -49,6 +50,20 @@ impl InteractionHandler for DemoHandler {
                     .field("v1", "A value")
                     .field("v2", "Another value"),
             ),
+
+            _ => panic!(),
+        }
+    }
+
+    fn handle_modal_submit(&self, ms: ModalSubmit) -> Response {
+        match ms.id.as_str() {
+            "my_modal" => {
+                let v1 = ms.values.get("v1").unwrap();
+                let v2 = ms.values.get("v2").unwrap();
+                let text = format!("You entered the values `{}` and `{}`.", v1, v2);
+
+                Response::Message(Message::new().text(&text))
+            }
 
             _ => panic!(),
         }
