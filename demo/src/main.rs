@@ -1,14 +1,11 @@
-use discord_interaction::{
-    run_handler, ApplicationCommand, InteractionHandler, Message, MessageComponent, Modal,
-    ModalSubmit, Response,
-};
+use discord_interaction::{run, ApplicationCommand, InteractionHandler, Message, MessageComponent, Modal, ModalSubmit, Response};
 use lambda_http::Error;
 
 const APPLICATION_PUBLIC_KEY: &str = env!("DEMO_PUBLIC_KEY");
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    run_handler::<DemoHandler>(APPLICATION_PUBLIC_KEY).await
+    run::<DemoHandler>(APPLICATION_PUBLIC_KEY).await
 }
 
 struct DemoHandler;

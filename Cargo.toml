@@ -1,9 +1,9 @@
 [package]
 name = "discord_interaction"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 license = "GPL-3.0-only"
-description = "A high-level library for using Discord's interactions model. Suitable for AWS Lambda."
+description = "A high-level library for using Discord's interactions model. Uses AWS Lambda."
 repository = "https://github.com/tarinyoom/discord-interaction"
 readme = "README.md"
 categories = ["gui", "web-programming"]

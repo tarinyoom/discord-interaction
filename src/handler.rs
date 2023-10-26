@@ -3,11 +3,13 @@ use super::discord_types::{
 };
 use super::user_types::{ApplicationCommand, MessageComponent, ModalSubmit, Response};
 
+/// General interaction handler type. To implement this trait, you must at
+/// minimum be able to handle incoming application commands (slash commands).
+/// If your application involves buttons or modal inputs, you should implement
+/// the corresponding trait functions as well.
 pub trait InteractionHandler {
     #[allow(unused)]
-    fn handle_application_command(ac: ApplicationCommand) -> Response {
-        todo!();
-    }
+    fn handle_application_command(ac: ApplicationCommand) -> Response;
 
     #[allow(unused)]
     fn handle_message_component(mc: MessageComponent) -> Response {
@@ -30,8 +32,7 @@ where
             data: None,
         },
 
-        InteractionType::ApplicationCommand => match T::handle_application_command(req.into())
-        {
+        InteractionType::ApplicationCommand => match T::handle_application_command(req.into()) {
             Response::Message(m) => m.into(),
             Response::Modal(m) => m.into(),
         },
