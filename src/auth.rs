@@ -52,8 +52,8 @@ where
     T: InteractionHandler + Sync,
 {
     tracing::info!({ %req_json }, "Request JSON");
-    
-    match serde_json::from_str::<super::discord_types::Request>(req_json) {
+
+    match serde_json::from_str::<super::discord_types::InteractionRequest>(req_json) {
         Ok(interaction) => {
             let res = super::handler::handle_interaction(handler, &interaction);
 

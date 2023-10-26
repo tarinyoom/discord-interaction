@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[derive(Deserialize, PartialEq, Debug)]
-pub struct Request {
+pub struct InteractionRequest {
     pub r#type: InteractionType,
     pub data: Option<InteractionData>,
     pub member: Option<GuildMember>,
@@ -52,7 +52,7 @@ pub struct User {
 }
 
 #[derive(Serialize, PartialEq, Debug)]
-pub struct Response {
+pub struct InteractionResponse {
     pub r#type: InteractionCallbackType,
     pub data: Option<InteractionCallbackData>,
 }

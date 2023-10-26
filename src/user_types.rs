@@ -67,8 +67,8 @@ impl MessageResponse {
 
 /* Conversions to and from Discord types */
 
-impl From<&Request> for ApplicationCommand {
-    fn from(req: &Request) -> Self {
+impl From<&InteractionRequest> for ApplicationCommand {
+    fn from(req: &InteractionRequest) -> Self {
         ApplicationCommand {
             command_name: req.data.as_ref().unwrap().name.as_ref().unwrap().clone(),
             user_id: req.member.as_ref().unwrap().user.id.clone(),
@@ -76,8 +76,8 @@ impl From<&Request> for ApplicationCommand {
     }
 }
 
-impl From<&Request> for MessageComponent {
-    fn from(req: &Request) -> Self {
+impl From<&InteractionRequest> for MessageComponent {
+    fn from(req: &InteractionRequest) -> Self {
         MessageComponent {
             id: req
                 .data
@@ -91,15 +91,16 @@ impl From<&Request> for MessageComponent {
     }
 }
 
-impl From<&Request> for ModalSubmit {
-    fn from(req: &Request) -> Self {
+impl From<&InteractionRequest> for ModalSubmit {
+    fn from(req: &InteractionRequest) -> Self {
         ModalSubmit { id: "".to_string() }
     }
 }
 
-impl Into<Response> for MessageResponse {
-    fn into(self) -> Response {
-        let rows = self.buttons
+impl Into<InteractionResponse> for MessageResponse {
+    fn into(self) -> InteractionResponse {
+        let rows = self
+            .buttons
             .chunks(5)
             .map(|chunk| Component {
                 r#type: ComponentType::ActionRow,
@@ -107,14 +108,11 @@ impl Into<Response> for MessageResponse {
                 style: None,
                 custom_id: None,
                 value: None,
-                components: Some(chunk
-                                 .iter()
-                                 .map(|b| b.into())
-                                 .collect())
+                components: Some(chunk.iter().map(|b| b.into()).collect()),
             })
             .collect();
 
-        Response {
+        InteractionResponse {
             r#type: if self.edit {
                 InteractionCallbackType::UpdateMessage
             } else {
