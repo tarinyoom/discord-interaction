@@ -4,7 +4,7 @@ use lambda_http::http::{HeaderMap, StatusCode};
 use lambda_http::{run, service_fn, Body, Error, Request, Response};
 use serde_json::json;
 
-pub async fn run_handler<T>(app_pk: &str, handler: &T) -> Result<(), Error>
+pub async fn run_handler<T>(app_pk: &str) -> Result<(), Error>
 where
     T: InteractionHandler + Sync,
 {
@@ -17,12 +17,12 @@ where
         .init();
 
     run(service_fn(|req: Request| async {
-        handle_request(req, app_pk, handler).await
+        handle_request::<T>(req, app_pk).await
     }))
     .await
 }
 
-async fn handle_request<T>(req: Request, app_pk: &str, handler: &T) -> Result<Response<Body>, Error>
+async fn handle_request<T>(req: Request, app_pk: &str) -> Result<Response<Body>, Error>
 where
     T: InteractionHandler + Sync,
 {
@@ -31,7 +31,7 @@ where
 
     match verify(&req_body, headers, app_pk) {
         Ok(()) => {
-            let res_body = handle_body(handler, &req_body).unwrap_or("{}".to_string());
+            let res_body = handle_body::<T>(&req_body).unwrap_or("{}".to_string());
 
             Ok(Response::builder()
                 .status(StatusCode::OK)
@@ -47,7 +47,7 @@ where
     }
 }
 
-fn handle_body<T>(handler: &T, req_json: &str) -> Option<String>
+fn handle_body<T>(req_json: &str) -> Option<String>
 where
     T: InteractionHandler + Sync,
 {
@@ -55,7 +55,7 @@ where
 
     match serde_json::from_str::<super::discord_types::InteractionRequest>(req_json) {
         Ok(interaction) => {
-            let res = super::handler::handle_interaction(handler, &interaction);
+            let res = super::handler::handle_interaction::<T>(&interaction);
 
             let res_json = json!(res).to_string();
 

@@ -8,14 +8,13 @@ const APPLICATION_PUBLIC_KEY: &str = env!("DEMO_PUBLIC_KEY");
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let handler = DemoHandler {};
-    run_handler(APPLICATION_PUBLIC_KEY, &handler).await
+    run_handler::<DemoHandler>(APPLICATION_PUBLIC_KEY).await
 }
 
 struct DemoHandler;
 
 impl InteractionHandler for DemoHandler {
-    fn handle_application_command(&self, ac: ApplicationCommand) -> Response {
+    fn handle_application_command(ac: ApplicationCommand) -> Response {
         match ac.command_name.as_str() {
             "hello" => Response::Message(
                 Message::new()
@@ -29,7 +28,7 @@ impl InteractionHandler for DemoHandler {
         }
     }
 
-    fn handle_message_component(&self, mc: MessageComponent) -> Response {
+    fn handle_message_component(mc: MessageComponent) -> Response {
         match mc.id.as_str() {
             "new_ephemeral" => Response::Message(
                 Message::new()
@@ -55,7 +54,7 @@ impl InteractionHandler for DemoHandler {
         }
     }
 
-    fn handle_modal_submit(&self, ms: ModalSubmit) -> Response {
+    fn handle_modal_submit(ms: ModalSubmit) -> Response {
         match ms.id.as_str() {
             "my_modal" => {
                 let v1 = ms.values.get("v1").unwrap();
