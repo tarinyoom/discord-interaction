@@ -1,5 +1,5 @@
 use discord_interaction::{
-    run_handler, ApplicationCommand, Button, InteractionHandler, MessageComponent, MessageResponse,
+    run_handler, ApplicationCommand, InteractionHandler, Message, MessageComponent, Modal, Response,
 };
 use lambda_http::Error;
 
@@ -14,29 +14,41 @@ async fn main() -> Result<(), Error> {
 struct DemoHandler;
 
 impl InteractionHandler for DemoHandler {
-    fn handle_application_command(&self, ac: ApplicationCommand) -> MessageResponse {
+    fn handle_application_command(&self, ac: ApplicationCommand) -> Response {
         match ac.command_name.as_str() {
-            "hello" => MessageResponse::new()
-                .text(&format!("Hello <@{}>!", ac.user_id))
-                .button("hello!", "hello/button1")
-                .button("world", "hello/button2"),
+            "hello" => Response::Message(
+                Message::new()
+                    .text(&format!("Hello <@{}>!", ac.user_id))
+                    .button("new_ephemeral", "spawn quiet message")
+                    .button("edit", "change this message")
+                    .button("modal", "try a modal"),
+            ),
 
             _ => panic!(),
         }
     }
 
-    fn handle_message_component(&self, mc: MessageComponent) -> MessageResponse {
+    fn handle_message_component(&self, mc: MessageComponent) -> Response {
         match mc.id.as_str() {
-            "hello/button1" => MessageResponse::new()
-                .text("You pressed the hello button!")
-                .button("good bye", "hello/goodbye")
-                .ephemeral(),
+            "new_ephemeral" => Response::Message(
+                Message::new()
+                    .text("You've spawned a new ephemeral message!")
+                    .ephemeral(),
+            ),
 
-            "hello/button2" => MessageResponse::new()
-                .text("You pressed the world button.")
-                .edit(),
+            "edit" => Response::Message(
+                Message::new()
+                    .text("You edited the existing message.")
+                    .edit(),
+            ),
 
-            "hello/goodbye" => MessageResponse::new().text("Good bye."),
+            "modal" => Response::Modal(
+                Modal::new()
+                    .id("my_modal")
+                    .title("Provide input values.")
+                    .field("v1", "A value")
+                    .field("v2", "Another value"),
+            ),
 
             _ => panic!(),
         }

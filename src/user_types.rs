@@ -17,7 +17,12 @@ pub struct ModalSubmit {
 
 /* Response Types */
 
-pub struct MessageResponse {
+pub enum Response {
+    Message(Message),
+    Modal(Modal),
+}
+
+pub struct Message {
     pub text: String,
     pub buttons: Vec<Button>,
     pub ephemeral: bool,
@@ -29,11 +34,22 @@ pub struct Button {
     pub text: String,
 }
 
-/* Convenience helpers */
+pub struct Modal {
+    pub id: String,
+    pub title: String,
+    pub fields: Vec<TextField>,
+}
 
-impl MessageResponse {
+pub struct TextField {
+    pub id: String,
+    pub label: String,
+}
+
+/* Convenience wrappers */
+
+impl Message {
     pub fn new() -> Self {
-        MessageResponse {
+        Message {
             text: "".to_string(),
             buttons: Vec::new(),
             ephemeral: false,
@@ -46,10 +62,10 @@ impl MessageResponse {
         self
     }
 
-    pub fn button(mut self, text: &str, id: &str) -> Self {
+    pub fn button(mut self, id: &str, text: &str) -> Self {
         self.buttons.push(Button {
-            text: text.to_string(),
             id: id.to_string(),
+            text: text.to_string(),
         });
         self
     }
@@ -61,6 +77,34 @@ impl MessageResponse {
 
     pub fn edit(mut self) -> Self {
         self.edit = true;
+        self
+    }
+}
+
+impl Modal {
+    pub fn new() -> Self {
+        Modal {
+            id: "unknown modal".to_string(),
+            title: "".to_string(),
+            fields: Vec::new(),
+        }
+    }
+
+    pub fn id(mut self, id: &str) -> Self {
+        self.id = id.to_string();
+        self
+    }
+
+    pub fn title(mut self, title: &str) -> Self {
+        self.title = title.to_string();
+        self
+    }
+
+    pub fn field(mut self, id: &str, label: &str) -> Self {
+        self.fields.push(TextField {
+            id: id.to_string(),
+            label: label.to_string(),
+        });
         self
     }
 }
@@ -97,7 +141,7 @@ impl From<&InteractionRequest> for ModalSubmit {
     }
 }
 
-impl Into<InteractionResponse> for MessageResponse {
+impl Into<InteractionResponse> for Message {
     fn into(self) -> InteractionResponse {
         let rows = self
             .buttons
@@ -126,6 +170,43 @@ impl Into<InteractionResponse> for MessageResponse {
                 custom_id: None,
                 title: None,
             }),
+        }
+    }
+}
+
+impl Into<InteractionResponse> for Modal {
+    fn into(self) -> InteractionResponse {
+        let fields = self
+            .fields
+            .iter()
+            .map(|field| Component {
+                r#type: ComponentType::ActionRow,
+                label: None,
+                style: None,
+                custom_id: None,
+                value: None,
+                components: Some(vec![Component {
+                    r#type: ComponentType::TextInput,
+                    label: Some(field.label.clone()),
+                    style: Some(1),
+                    custom_id: Some(field.id.clone()),
+                    value: None,
+                    components: None,
+                }]),
+            })
+            .collect();
+
+        let data = InteractionCallbackData {
+            content: None,
+            flags: None,
+            components: Some(fields),
+            custom_id: Some(self.id),
+            title: Some(self.title),
+        };
+
+        InteractionResponse {
+            r#type: InteractionCallbackType::Modal,
+            data: Some(data),
         }
     }
 }
