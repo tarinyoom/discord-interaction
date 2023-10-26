@@ -69,8 +69,8 @@ pub enum InteractionCallbackType {
 #[derive(Serialize, PartialEq, Debug)]
 pub struct InteractionCallbackData {
     pub content: Option<String>,
-    pub flags: Option<MessageFlags>,
-    pub components: Vec<Component>,
+    pub flags: Option<u8>,
+    pub components: Option<Vec<Component>>,
     pub custom_id: Option<String>,
     pub title: Option<String>,
 }
@@ -103,10 +103,4 @@ pub enum ComponentType {
 #[repr(u8)]
 pub enum ButtonStyle {
     Primary = 1,
-}
-
-#[derive(Serialize_repr, PartialEq, Debug)]
-#[repr(u16)]
-pub enum MessageFlags {
-    Ephemeral = 64,
 }

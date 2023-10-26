@@ -47,17 +47,19 @@ where
     }
 }
 
-fn handle_body<T>(handler: &T, req: &str) -> Option<String>
+fn handle_body<T>(handler: &T, req_json: &str) -> Option<String>
 where
     T: InteractionHandler + Sync,
 {
-    match serde_json::from_str::<super::discord_types::Request>(req) {
+    tracing::info!({ %req_json }, "Request JSON");
+    
+    match serde_json::from_str::<super::discord_types::Request>(req_json) {
         Ok(interaction) => {
             let res = super::handler::handle_interaction(handler, &interaction);
 
             let res_json = json!(res).to_string();
 
-            tracing::info!({ %res_json }, "Returning response json");
+            tracing::info!({ %res_json }, "Response JSON");
 
             Some(res_json)
         }

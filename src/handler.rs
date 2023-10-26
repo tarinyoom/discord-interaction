@@ -1,19 +1,16 @@
 use super::discord_types::{InteractionCallbackType, InteractionType, Request, Response};
-use super::user_types::{
-    ApplicationCommand, ApplicationCommandResponse, MessageComponent, MessageComponentResponse,
-    ModalSubmit, ModalSubmitResponse,
-};
+use super::user_types::{ApplicationCommand, MessageComponent, MessageResponse, ModalSubmit};
 
 pub trait InteractionHandler {
-    fn handle_application_command(&self, ac: ApplicationCommand) -> ApplicationCommandResponse {
+    fn handle_application_command(&self, ac: ApplicationCommand) -> MessageResponse {
         todo!();
     }
 
-    fn handle_message_component(&self, mc: MessageComponent) -> MessageComponentResponse {
+    fn handle_message_component(&self, mc: MessageComponent) -> MessageResponse {
         todo!();
     }
 
-    fn handle_modal_submit(&self, ms: ModalSubmit) -> ModalSubmitResponse {
+    fn handle_modal_submit(&self, ms: ModalSubmit) -> MessageResponse {
         todo!();
     }
 }

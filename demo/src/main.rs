@@ -1,5 +1,5 @@
 use discord_interaction::{
-    run_handler, ApplicationCommand, ApplicationCommandResponse, Button, InteractionHandler,
+    run_handler, ApplicationCommand, Button, InteractionHandler, MessageComponent, MessageResponse,
 };
 use lambda_http::Error;
 
@@ -14,23 +14,31 @@ async fn main() -> Result<(), Error> {
 struct DemoHandler;
 
 impl InteractionHandler for DemoHandler {
-    fn handle_application_command(&self, ac: ApplicationCommand) -> ApplicationCommandResponse {
+    fn handle_application_command(&self, ac: ApplicationCommand) -> MessageResponse {
         match ac.command_name.as_str() {
-            "hello" => ApplicationCommandResponse {
-                text: format!("Hello <@{}>!", ac.user_id),
-                buttons: vec![
-                    Button {
-                        text: "hello!".to_string(),
-                        id: "hello/button1".to_string(),
-                    },
-                    Button {
-                        text: "world.".to_string(),
-                        id: "hello/button2".to_string(),
-                    },
-                ],
-            },
+            "hello" => MessageResponse::new()
+                .text(&format!("Hello <@{}>!", ac.user_id))
+                .button("hello!", "hello/button1")
+                .button("world", "hello/button2"),
 
-            _ => todo!(),
+            _ => panic!(),
+        }
+    }
+
+    fn handle_message_component(&self, mc: MessageComponent) -> MessageResponse {
+        match mc.id.as_str() {
+            "hello/button1" => MessageResponse::new()
+                .text("You pressed the hello button!")
+                .button("good bye", "hello/goodbye")
+                .ephemeral(),
+
+            "hello/button2" => MessageResponse::new()
+                .text("You pressed the world button.")
+                .edit(),
+
+            "hello/goodbye" => MessageResponse::new().text("Good bye."),
+
+            _ => panic!(),
         }
     }
 }

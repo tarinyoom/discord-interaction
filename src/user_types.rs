@@ -1,9 +1,71 @@
 use super::discord_types::*;
 
+/* Request Types */
+
 pub struct ApplicationCommand {
     pub command_name: String,
     pub user_id: String,
 }
+
+pub struct MessageComponent {
+    pub id: String,
+}
+
+pub struct ModalSubmit {
+    pub id: String,
+}
+
+/* Response Types */
+
+pub struct MessageResponse {
+    pub text: String,
+    pub buttons: Vec<Button>,
+    pub ephemeral: bool,
+    pub edit: bool,
+}
+
+pub struct Button {
+    pub id: String,
+    pub text: String,
+}
+
+/* Convenience helpers */
+
+impl MessageResponse {
+    pub fn new() -> Self {
+        MessageResponse {
+            text: "".to_string(),
+            buttons: Vec::new(),
+            ephemeral: false,
+            edit: false,
+        }
+    }
+
+    pub fn text(mut self, text: &str) -> Self {
+        self.text = text.to_string();
+        self
+    }
+
+    pub fn button(mut self, text: &str, id: &str) -> Self {
+        self.buttons.push(Button {
+            text: text.to_string(),
+            id: id.to_string(),
+        });
+        self
+    }
+
+    pub fn ephemeral(mut self) -> Self {
+        self.ephemeral = true;
+        self
+    }
+
+    pub fn edit(mut self) -> Self {
+        self.edit = true;
+        self
+    }
+}
+
+/* Conversions to and from Discord types */
 
 impl From<&Request> for ApplicationCommand {
     fn from(req: &Request) -> Self {
@@ -14,18 +76,19 @@ impl From<&Request> for ApplicationCommand {
     }
 }
 
-pub struct MessageComponent {
-    pub id: String,
-}
-
 impl From<&Request> for MessageComponent {
     fn from(req: &Request) -> Self {
-        MessageComponent { id: "".to_string() }
+        MessageComponent {
+            id: req
+                .data
+                .as_ref()
+                .unwrap()
+                .custom_id
+                .as_ref()
+                .unwrap()
+                .clone(),
+        }
     }
-}
-
-pub struct ModalSubmit {
-    pub id: String,
 }
 
 impl From<&Request> for ModalSubmit {
@@ -34,40 +97,39 @@ impl From<&Request> for ModalSubmit {
     }
 }
 
-pub struct ApplicationCommandResponse {
-    pub text: String,
-    pub buttons: Vec<Button>,
-}
-
-impl Into<Response> for ApplicationCommandResponse {
+impl Into<Response> for MessageResponse {
     fn into(self) -> Response {
-        let row = Component {
-            r#type: ComponentType::ActionRow,
-            label: None,
-            style: None,
-            custom_id: None,
-            value: None,
-            components: Some(self.buttons.iter().map(|b| b.into()).collect()),
-        };
-
-        let rows = vec![row];
+        let rows = self.buttons
+            .chunks(5)
+            .map(|chunk| Component {
+                r#type: ComponentType::ActionRow,
+                label: None,
+                style: None,
+                custom_id: None,
+                value: None,
+                components: Some(chunk
+                                 .iter()
+                                 .map(|b| b.into())
+                                 .collect())
+            })
+            .collect();
 
         Response {
-            r#type: InteractionCallbackType::ChannelMessageWithSource,
+            r#type: if self.edit {
+                InteractionCallbackType::UpdateMessage
+            } else {
+                InteractionCallbackType::ChannelMessageWithSource
+            },
+
             data: Some(InteractionCallbackData {
                 content: Some(self.text),
-                components: rows,
-                flags: Some(MessageFlags::Ephemeral),
+                components: Some(rows),
+                flags: Some(if self.ephemeral { 64 } else { 0 }),
                 custom_id: None,
                 title: None,
             }),
         }
     }
-}
-
-pub struct Button {
-    pub id: String,
-    pub text: String,
 }
 
 impl Into<Component> for &Button {
@@ -80,21 +142,5 @@ impl Into<Component> for &Button {
             value: None,
             components: None,
         }
-    }
-}
-
-pub struct MessageComponentResponse {}
-
-impl Into<Response> for MessageComponentResponse {
-    fn into(self) -> Response {
-        todo!();
-    }
-}
-
-pub struct ModalSubmitResponse {}
-
-impl Into<Response> for ModalSubmitResponse {
-    fn into(self) -> Response {
-        todo!();
     }
 }
