@@ -1,4 +1,4 @@
-use super::discord_types::*;
+use super::discord_types;
 use std::collections::HashMap;
 
 /// An application command is an interaction type consisting of a text command
@@ -15,6 +15,9 @@ pub struct ApplicationCommand {
 pub struct MessageComponent {
     /// The ID of the component.
     pub id: String,
+
+    /// The message that this interaction was based off of.
+    pub source: SourceMessage,
 }
 
 /// A modal submit is an interaction type resulting in a user submitting a
@@ -22,6 +25,11 @@ pub struct MessageComponent {
 pub struct ModalSubmit {
     pub id: String,
     pub values: HashMap<String, String>,
+    pub source: SourceMessage,
+}
+
+pub struct SourceMessage {
+    pub text: String,
 }
 
 /// A response can take one of two forms, either a modal or a message.
@@ -156,8 +164,8 @@ impl Modal {
     }
 }
 
-impl From<&InteractionRequest> for ApplicationCommand {
-    fn from(req: &InteractionRequest) -> Self {
+impl From<&discord_types::InteractionRequest> for ApplicationCommand {
+    fn from(req: &discord_types::InteractionRequest) -> Self {
         ApplicationCommand {
             command_name: req.data.as_ref().unwrap().name.as_ref().unwrap().clone(),
             user_id: req.member.as_ref().unwrap().user.id.clone(),
@@ -165,8 +173,8 @@ impl From<&InteractionRequest> for ApplicationCommand {
     }
 }
 
-impl From<&InteractionRequest> for MessageComponent {
-    fn from(req: &InteractionRequest) -> Self {
+impl From<&discord_types::InteractionRequest> for MessageComponent {
+    fn from(req: &discord_types::InteractionRequest) -> Self {
         MessageComponent {
             id: req
                 .data
@@ -176,12 +184,14 @@ impl From<&InteractionRequest> for MessageComponent {
                 .as_ref()
                 .unwrap()
                 .clone(),
+
+            source: req.message.as_ref().unwrap().into(),
         }
     }
 }
 
-impl From<&InteractionRequest> for ModalSubmit {
-    fn from(req: &InteractionRequest) -> Self {
+impl From<&discord_types::InteractionRequest> for ModalSubmit {
+    fn from(req: &discord_types::InteractionRequest) -> Self {
         ModalSubmit {
             id: req
                 .data
@@ -208,17 +218,27 @@ impl From<&InteractionRequest> for ModalSubmit {
                     )
                 })
                 .collect(),
+
+            source: req.message.as_ref().unwrap().into(),
         }
     }
 }
 
-impl Into<InteractionResponse> for Message {
-    fn into(self) -> InteractionResponse {
+impl From<&discord_types::Message> for SourceMessage {
+    fn from(msg: &discord_types::Message) -> Self {
+        SourceMessage {
+            text: msg.content.clone(),
+        }
+    }
+}
+
+impl Into<discord_types::InteractionResponse> for Message {
+    fn into(self) -> discord_types::InteractionResponse {
         let rows = self
             .buttons
             .chunks(5)
-            .map(|chunk| Component {
-                r#type: ComponentType::ActionRow,
+            .map(|chunk| discord_types::Component {
+                r#type: discord_types::ComponentType::ActionRow,
                 label: None,
                 style: None,
                 custom_id: None,
@@ -227,14 +247,14 @@ impl Into<InteractionResponse> for Message {
             })
             .collect();
 
-        InteractionResponse {
+        discord_types::InteractionResponse {
             r#type: if self.edit {
-                InteractionCallbackType::UpdateMessage
+                discord_types::InteractionCallbackType::UpdateMessage
             } else {
-                InteractionCallbackType::ChannelMessageWithSource
+                discord_types::InteractionCallbackType::ChannelMessageWithSource
             },
 
-            data: Some(InteractionCallbackData {
+            data: Some(discord_types::InteractionCallbackData {
                 content: Some(self.text),
                 components: Some(rows),
                 flags: Some(if self.ephemeral { 64 } else { 0 }),
@@ -245,19 +265,19 @@ impl Into<InteractionResponse> for Message {
     }
 }
 
-impl Into<InteractionResponse> for Modal {
-    fn into(self) -> InteractionResponse {
+impl Into<discord_types::InteractionResponse> for Modal {
+    fn into(self) -> discord_types::InteractionResponse {
         let fields = self
             .fields
             .iter()
-            .map(|field| Component {
-                r#type: ComponentType::ActionRow,
+            .map(|field| discord_types::Component {
+                r#type: discord_types::ComponentType::ActionRow,
                 label: None,
                 style: None,
                 custom_id: None,
                 value: None,
-                components: Some(vec![Component {
-                    r#type: ComponentType::TextInput,
+                components: Some(vec![discord_types::Component {
+                    r#type: discord_types::ComponentType::TextInput,
                     label: Some(field.label.clone()),
                     style: Some(1),
                     custom_id: Some(field.id.clone()),
@@ -267,7 +287,7 @@ impl Into<InteractionResponse> for Modal {
             })
             .collect();
 
-        let data = InteractionCallbackData {
+        let data = discord_types::InteractionCallbackData {
             content: None,
             flags: None,
             components: Some(fields),
@@ -275,17 +295,17 @@ impl Into<InteractionResponse> for Modal {
             title: Some(self.title),
         };
 
-        InteractionResponse {
-            r#type: InteractionCallbackType::Modal,
+        discord_types::InteractionResponse {
+            r#type: discord_types::InteractionCallbackType::Modal,
             data: Some(data),
         }
     }
 }
 
-impl Into<Component> for &Button {
-    fn into(self) -> Component {
-        Component {
-            r#type: ComponentType::Button,
+impl Into<discord_types::Component> for &Button {
+    fn into(self) -> discord_types::Component {
+        discord_types::Component {
+            r#type: discord_types::ComponentType::Button,
             label: Some(self.text.clone()),
             style: Some(1),
             custom_id: Some(self.id.clone()),

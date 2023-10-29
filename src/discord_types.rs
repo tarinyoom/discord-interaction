@@ -38,12 +38,6 @@ pub struct GuildMember {
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct Message {
     pub content: String,
-    pub interaction: Option<MessageInteraction>,
-}
-
-#[derive(Deserialize, PartialEq, Debug)]
-pub struct MessageInteraction {
-    pub name: String,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
