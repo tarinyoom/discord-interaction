@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-discord_interaction = { path = ".." }
+discord_interaction = { path = "../.." }
 lambda_http = "0.8.1"
 tokio = { version = "1", features = ["macros"] }
 

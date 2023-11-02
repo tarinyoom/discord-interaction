@@ -1,85 +1,71 @@
-use super::discord_types::*;
+use super::discord_types;
 use std::collections::HashMap;
 
-/// An application command is an interaction type consisting of a text command
-/// entered into chat, prefixed by a `/` symbol.
+/// An top level interaction initiated by the user. Application commands do not require any existing conversation with the bot to be occurring. Currently, only chat application commands (slash commands) are fully supported.
 pub struct ApplicationCommand {
-    /// The name of the command, without the prefix `/`.
     pub command_name: String,
-
-    /// The user id of the user invoking the command.
     pub user_id: String,
 }
 
-/// A message component is an interaction type resulting from a button press.
+/// An interaction caused by the user's interaction with a message component embedded in a chat message. Currently, only button presses are supported.
 pub struct MessageComponent {
-    /// The ID of the component.
     pub id: String,
+
+    /// The message that this component was originally attached to.
+    pub source: SourceMessage,
 }
 
-/// A modal submit is an interaction type resulting in a user submitting a
-/// pop-up modal form.
+/// An interaction type caused by the user submitting a completed modal form. Modals are the
+/// primary way of retrieving text input from the user.
 pub struct ModalSubmit {
     pub id: String,
     pub values: HashMap<String, String>,
+    /// The message that this modal was originally attached to.
+    pub source: SourceMessage,
 }
 
-/// A response can take one of two forms, either a modal or a message.
+/// A message that a message component or modal was originally attached to. This allows the
+/// application to maintain some notion of "state", by reasoning based on the source message's
+/// text.
+pub struct SourceMessage {
+    pub text: String,
+}
+
+/// A response to an interaction. This response can either be a message in chat, or a modal, which
+/// will pop up over the user's screen.
 pub enum Response {
     Message(Message),
     Modal(Modal),
 }
 
-/// A message response will result in a message being posted in the Discord
-/// chat. This message will come from directly from the bot.
+/// A message response, resulting in a message in chat.
 pub struct Message {
-    /// The text content of the message.
     pub text: String,
-
-    /// Buttons attached to the message.
     pub buttons: Vec<Button>,
-
-    /// If this is true, then the message will be only visible to the user who
-    /// triggered it.
+    /// If true, the message will be visible to only the recipient.
     pub ephemeral: bool,
-
-    /// If this is true, then the message will edit the original Discord
-    /// message that this interaction spawned off of.
+    /// If true, the message will replace the original message.
     pub edit: bool,
 }
 
 /// A button component, which the user can interact with. If a user clicks such
 /// a button, it will spawn a message component interaction.
 pub struct Button {
-    /// The ID of the button, to be passed with any message component
-    /// interaction it triggers.
     pub id: String,
-
-    /// The text displayed on the button.
     pub text: String,
 }
 
-/// A modal component, which allows the user to input text information. When
-/// the user submits the modal, it will spawn a modal submit interaction.
+/// A modal response, which allows the user to input text information. A modal cannot be a response
+/// to a modal submit interaction.
 pub struct Modal {
-    /// The ID of the modal, to be passed with the modal submit interaction it
-    /// triggers.
     pub id: String,
-
-    /// The title text displayed on the modal.
     pub title: String,
-
-    /// A list of text fields included in the modal.
     pub fields: Vec<TextField>,
 }
 
-/// A text field included on the modal.
+/// A text field included in a modal.
 pub struct TextField {
-    /// The ID of the text field, to be passed as a key along with any modal
-    /// submit interaction.
     pub id: String,
-
-    /// The label text displayed next to the text field.
     pub label: String,
 }
 
@@ -156,8 +142,8 @@ impl Modal {
     }
 }
 
-impl From<&InteractionRequest> for ApplicationCommand {
-    fn from(req: &InteractionRequest) -> Self {
+impl From<&discord_types::InteractionRequest> for ApplicationCommand {
+    fn from(req: &discord_types::InteractionRequest) -> Self {
         ApplicationCommand {
             command_name: req.data.as_ref().unwrap().name.as_ref().unwrap().clone(),
             user_id: req.member.as_ref().unwrap().user.id.clone(),
@@ -165,8 +151,8 @@ impl From<&InteractionRequest> for ApplicationCommand {
     }
 }
 
-impl From<&InteractionRequest> for MessageComponent {
-    fn from(req: &InteractionRequest) -> Self {
+impl From<&discord_types::InteractionRequest> for MessageComponent {
+    fn from(req: &discord_types::InteractionRequest) -> Self {
         MessageComponent {
             id: req
                 .data
@@ -176,12 +162,14 @@ impl From<&InteractionRequest> for MessageComponent {
                 .as_ref()
                 .unwrap()
                 .clone(),
+
+            source: req.message.as_ref().unwrap().into(),
         }
     }
 }
 
-impl From<&InteractionRequest> for ModalSubmit {
-    fn from(req: &InteractionRequest) -> Self {
+impl From<&discord_types::InteractionRequest> for ModalSubmit {
+    fn from(req: &discord_types::InteractionRequest) -> Self {
         ModalSubmit {
             id: req
                 .data
@@ -208,17 +196,27 @@ impl From<&InteractionRequest> for ModalSubmit {
                     )
                 })
                 .collect(),
+
+            source: req.message.as_ref().unwrap().into(),
         }
     }
 }
 
-impl Into<InteractionResponse> for Message {
-    fn into(self) -> InteractionResponse {
+impl From<&discord_types::Message> for SourceMessage {
+    fn from(msg: &discord_types::Message) -> Self {
+        SourceMessage {
+            text: msg.content.clone(),
+        }
+    }
+}
+
+impl Into<discord_types::InteractionResponse> for Message {
+    fn into(self) -> discord_types::InteractionResponse {
         let rows = self
             .buttons
             .chunks(5)
-            .map(|chunk| Component {
-                r#type: ComponentType::ActionRow,
+            .map(|chunk| discord_types::Component {
+                r#type: discord_types::ComponentType::ActionRow,
                 label: None,
                 style: None,
                 custom_id: None,
@@ -227,14 +225,14 @@ impl Into<InteractionResponse> for Message {
             })
             .collect();
 
-        InteractionResponse {
+        discord_types::InteractionResponse {
             r#type: if self.edit {
-                InteractionCallbackType::UpdateMessage
+                discord_types::InteractionCallbackType::UpdateMessage
             } else {
-                InteractionCallbackType::ChannelMessageWithSource
+                discord_types::InteractionCallbackType::ChannelMessageWithSource
             },
 
-            data: Some(InteractionCallbackData {
+            data: Some(discord_types::InteractionCallbackData {
                 content: Some(self.text),
                 components: Some(rows),
                 flags: Some(if self.ephemeral { 64 } else { 0 }),
@@ -245,19 +243,19 @@ impl Into<InteractionResponse> for Message {
     }
 }
 
-impl Into<InteractionResponse> for Modal {
-    fn into(self) -> InteractionResponse {
+impl Into<discord_types::InteractionResponse> for Modal {
+    fn into(self) -> discord_types::InteractionResponse {
         let fields = self
             .fields
             .iter()
-            .map(|field| Component {
-                r#type: ComponentType::ActionRow,
+            .map(|field| discord_types::Component {
+                r#type: discord_types::ComponentType::ActionRow,
                 label: None,
                 style: None,
                 custom_id: None,
                 value: None,
-                components: Some(vec![Component {
-                    r#type: ComponentType::TextInput,
+                components: Some(vec![discord_types::Component {
+                    r#type: discord_types::ComponentType::TextInput,
                     label: Some(field.label.clone()),
                     style: Some(1),
                     custom_id: Some(field.id.clone()),
@@ -267,7 +265,7 @@ impl Into<InteractionResponse> for Modal {
             })
             .collect();
 
-        let data = InteractionCallbackData {
+        let data = discord_types::InteractionCallbackData {
             content: None,
             flags: None,
             components: Some(fields),
@@ -275,17 +273,17 @@ impl Into<InteractionResponse> for Modal {
             title: Some(self.title),
         };
 
-        InteractionResponse {
-            r#type: InteractionCallbackType::Modal,
+        discord_types::InteractionResponse {
+            r#type: discord_types::InteractionCallbackType::Modal,
             data: Some(data),
         }
     }
 }
 
-impl Into<Component> for &Button {
-    fn into(self) -> Component {
-        Component {
-            r#type: ComponentType::Button,
+impl Into<discord_types::Component> for &Button {
+    fn into(self) -> discord_types::Component {
+        discord_types::Component {
+            r#type: discord_types::ComponentType::Button,
             label: Some(self.text.clone()),
             style: Some(1),
             custom_id: Some(self.id.clone()),
