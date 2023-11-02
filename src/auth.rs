@@ -4,9 +4,7 @@ use lambda_http::http::{HeaderMap, StatusCode};
 use lambda_http::{service_fn, Body, Error, Request, Response};
 use serde_json::json;
 
-/// Runs the interaction handler T on an incoming interaction, using an AWS
-/// lambda. You must supply a valid application public key that matches your
-/// discord bot, so that the incoming interaction can be authenticated.
+/// Sets up an interaction handler on AWS Lambda to receive and process incoming Discord interactions. This function takes in an application public key, which should match the one provided with your Discord bot.
 pub async fn run<T>(app_pk: &str) -> Result<(), Error>
 where
     T: InteractionHandler + Sync,
